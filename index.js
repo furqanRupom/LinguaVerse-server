@@ -36,6 +36,9 @@ async function run() {
 
     // TODO : we will apply get operation in this users routes when we wanna to do admin routes
 
+
+    // users
+
     app.post('/users',async(req,res)=>{
       const users = req.body;
       const query = {email:users?.email}
@@ -48,7 +51,16 @@ async function run() {
     })
 
 
-  
+
+
+    // classes
+
+    app.post('/classes',async(req,res)=>{
+      const classes = req.body
+      const result = await classesCollection.insertOne(classes)
+      res.send(result);
+    })
+
 
 
 
