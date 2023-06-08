@@ -55,11 +55,25 @@ async function run() {
 
     // classes
 
+
+
+
+    // TODO : verify users
+    
+    app.get('/classes',async(req,res)=>{
+      const email = req.query.email;
+      const query = {instructorEmail:email};
+      const result = await classesCollection.find(query).toArray()
+      res.send(result);
+    })
+
+
     app.post('/classes',async(req,res)=>{
       const classes = req.body
       const result = await classesCollection.insertOne(classes)
       res.send(result);
     })
+
 
 
 
