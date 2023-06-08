@@ -8,10 +8,6 @@ app.use(express.json());
 require('dotenv').config()
 app.use(morgan('dev'))
 
-console.log(process.env.LINGUAVERSE_NAME)
-console.log(process.env.LINGUAVERSE_PASS)
-
-
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -31,6 +27,30 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
+
+
+    const usersCollection = client.db('summerCampUsersDB').collection('summerCampUsers');
+    const classesCollection =  client.db('summerCampUsersDB').collection('classes');
+
+
+
+    // TODO : we will apply get operation in this users routes when we wanna to do admin routes
+
+    app.post('/users',async(req,res)=>{
+      const users = req.body;
+      const query = {email:users?.email}
+      const isExitUsers =await usersCollection.findOne(query)
+      if(isExitUsers){
+        return res.status(401).send({error:true,message:'users already exit'})
+      }
+      const result = await usersCollection.insertOne(users)
+      res.send(result)
+    })
+
+
+  
+
+
 
 
 
