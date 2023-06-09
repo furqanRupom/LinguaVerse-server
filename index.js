@@ -162,10 +162,44 @@ async function run() {
           status:'denied'
         }
       }
-
       const result = await classesCollection.updateOne(filter,approvedClass)
       res.send(result);
     })
+
+
+    // make admin
+
+    app.patch('/users/admin/:id',async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id:new ObjectId(id)}
+      const newAdmin = {
+        $set:{
+          role:'admin'
+        }
+      }
+      const options = {upsert:true}
+
+      const result = await usersCollection.updateOne(filter,newAdmin,options)
+      res.send(result);
+    })
+
+
+
+    // make instructor
+
+
+    app.patch('/users/instructor/:id',async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id:new ObjectId(id)}
+      const newInstructor = {
+        $set:{
+          role:'instructor'
+        }
+      }
+      const result = await usersCollection.updateOne(filter,newInstructor)
+      res.send(result);
+    })
+
 
 
 
