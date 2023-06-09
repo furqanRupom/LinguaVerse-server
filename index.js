@@ -10,7 +10,7 @@ app.use(morgan('dev'))
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.LINGUAVERSE_NAME}:${process.env.LINGUAVERSE_PASS}@cluster0.eujpnmx.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -59,7 +59,7 @@ async function run() {
 
 
     // TODO : verify users
-    
+
     app.get('/classes',async(req,res)=>{
       const email = req.query.email;
       const query = {instructorEmail:email};
@@ -74,6 +74,21 @@ async function run() {
       res.send(result);
     })
 
+
+    app.put('/classes/:id',async(req,res)=>{
+      const id = req.params.id;
+      const classInfo = req.body
+      const filter = {_id:new ObjectId(id)}
+      const updateClass = {
+        $set:{
+            className:classInfo.className,
+            seats:classInfo.seats,
+            price:classInfo.price
+        }
+      }
+      const result = await classesCollection.updateOne(filter,updateClass)
+      res.send(result)
+    })
 
 
 
