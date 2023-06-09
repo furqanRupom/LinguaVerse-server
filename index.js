@@ -56,6 +56,12 @@ async function run() {
     // classes
 
 
+    // all classes
+
+      app.get('/allClasses',async(req,res)=>{
+        const result = await classesCollection.find().toArray()
+        res.send(result);
+      })
 
 
     // TODO : verify users
@@ -97,6 +103,69 @@ async function run() {
       const result = await classesCollection.deleteOne(query)
       res.send(result)
     })
+
+
+
+
+    // admin
+
+     // // give feedback
+
+   app.put('/allClasses/feedback/:id',async(req,res)=>{
+    const id = req.params.id;
+    console.log(id)
+    const feedbackInfo = req.body
+    console.log(feedbackInfo)
+    const filter = {_id:new ObjectId(id)}
+    const options = {upsert:true}
+    const sentFeedBack = {
+      $set:{
+        feedback:feedbackInfo.feedback
+      }
+
+    }
+    const result = await classesCollection.updateOne(filter,sentFeedBack,options)
+    res.send(result);
+   })
+
+
+
+
+
+    // approved
+
+    app.patch('/allClasses/:id',async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id:new ObjectId(id)}
+      const approvedClass = {
+        $set:{
+          status:'approved'
+        }
+      }
+
+      const result = await classesCollection.updateOne(filter,approvedClass)
+      res.send(result);
+    })
+
+    // denied
+
+    app.patch('/allClasses/denied/:id',async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id:new ObjectId(id)}
+      const approvedClass = {
+        $set:{
+          status:'denied'
+        }
+      }
+
+      const result = await classesCollection.updateOne(filter,approvedClass)
+      res.send(result);
+    })
+
+
+
+
+
 
 
 
