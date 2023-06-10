@@ -61,6 +61,7 @@ async function run() {
 
     const usersCollection = client.db('summerCampUsersDB').collection('summerCampUsers');
     const classesCollection =  client.db('summerCampUsersDB').collection('classes');
+    const selectedClassesCollection = client.db('summerCampUsersDB').collection('selectedClasses');
 
 
 
@@ -211,7 +212,6 @@ async function run() {
       })
 
 
-    // TODO : verify users
 
     app.get('/classes',verifyJWT,verifyInstructor,async(req,res)=>{
       const email = req.query.email;
@@ -347,7 +347,7 @@ async function run() {
 
     // instructors
 
-    app.get('/users/instructor',async(req,res)=>{
+    app.get('/users/instructors',async(req,res)=>{
       const query={role:'instructor'}
       const result = await usersCollection.find(query).toArray()
       res.send(result)
@@ -358,6 +358,17 @@ async function run() {
     app.get('/classes/approved', async(req,res)=>{
       const query={status:'approved'}
       const result = await classesCollection.find(query).toArray()
+      res.send(result);
+    })
+
+
+
+    // student
+
+
+    app.post('/selectedClasses',async(req,res)=>{
+      const selectClass = req.body;
+      const result = await selectedClassesCollection.insertOne(selectClass)
       res.send(result);
     })
 
