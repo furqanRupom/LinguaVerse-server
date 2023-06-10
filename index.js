@@ -366,11 +366,32 @@ async function run() {
     // student
 
 
+    app.delete('/selectedClasses/:id',verifyJWT,verifyStudent,async(req,res)=>{
+      const id = req.params.id
+      const query = {selectClassId:id}
+      console.log(query,id)
+      const result = await selectedClassesCollection.deleteOne(query)
+      res.send(result);
+    })
+
+
+    app.get('/selectClasses/:email',verifyJWT,verifyStudent,async(req,res)=>{
+      const email = req.params.email
+      const query = {studentEmail:email}
+      console.log(query)
+      const result = await selectedClassesCollection.find(query).toArray()
+      res.send(result);
+    })
+
     app.post('/selectedClasses',async(req,res)=>{
       const selectClass = req.body;
       const result = await selectedClassesCollection.insertOne(selectClass)
       res.send(result);
     })
+
+
+
+
 
 
 
