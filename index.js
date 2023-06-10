@@ -91,6 +91,21 @@ async function run() {
 
 
 
+    const verifyStudent = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user.role !== "student") {
+        return res
+          .status(401)
+          .send({ error: true, message: "Access forbidden" });
+      }
+      next();
+    };
+
+
+
+
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {
@@ -164,6 +179,24 @@ async function run() {
       res.send(result);
     });
 
+
+
+
+    // verify student
+
+    app.get("/users/student/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      console.log(req.decoded.email);
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ student: false });
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { student: user?.role === "student" };
+      console.log(result);
+      res.send(result);
+    });
 
 
 
