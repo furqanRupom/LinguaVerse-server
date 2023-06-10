@@ -125,14 +125,6 @@ async function run() {
 
 
 
-
-
-
-
-
-
-
-
     app.post('/users',async(req,res)=>{
       const users = req.body;
       const query = {email:users?.email}
@@ -387,6 +379,13 @@ async function run() {
       const selectClass = req.body;
       const result = await selectedClassesCollection.insertOne(selectClass)
       res.send(result);
+    })
+
+
+    app.get('/popular/instructors',async(req,res)=>{
+      const query={role:'instructor'}
+      const result = await usersCollection.find(query).limit(6).toArray()
+      res.send(result)
     })
 
 
