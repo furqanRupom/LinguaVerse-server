@@ -202,6 +202,7 @@ async function run() {
       const updateClass = {
         $set:{
             className:classInfo.className,
+            image:classInfo.image,
             seats:classInfo.seats,
             price:classInfo.price
         }
@@ -311,6 +312,21 @@ async function run() {
 
 
 
+    // instructors
+
+    app.get('/users/instructor',async(req,res)=>{
+      const query={role:'instructor'}
+      const result = await usersCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // approved classes
+
+    app.get('/classes/approved', async(req,res)=>{
+      const query={status:'approved'}
+      const result = await classesCollection.find(query).toArray()
+      res.send(result);
+    })
 
 
 
