@@ -9,8 +9,7 @@ app.use(express.json());
 require('dotenv').config()
 app.use(morgan('dev'))
 
-
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_TOKEN);
 
 
 
@@ -62,6 +61,10 @@ async function run() {
     const usersCollection = client.db('summerCampUsersDB').collection('summerCampUsers');
     const classesCollection =  client.db('summerCampUsersDB').collection('classes');
     const selectedClassesCollection = client.db('summerCampUsersDB').collection('selectedClasses');
+
+    const paymentsCollection= client.db('summerCampUsersDB').collection('payments')
+
+    const enrolledClassCollection = client.db('summerCampUsersDB').collection('enrolledClasses')
 
 
 
@@ -389,6 +392,56 @@ async function run() {
     })
 
 
+
+
+    // payments
+
+
+    app.post("/create-payment-intend", verifyJWT, async (req, res) => {
+      const {price} = req.body;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+
+app.post("/payments",verifyJWT, async (req, res) => {
+      const payment = req.body;
+      console.log(payment)
+      const insertedResult = await paymentsCollection.insertOne(payment);
+
+      // and remove this all item from carts collection after payment...
+
+      // enrollment
+
+      const queryClass = {
+        _id:new ObjectId(payment.selectedClassId)
+      }
+
+      const query = {
+        selectClassId:payment.selectedClassId,
+      };
+      const findEnrollClasses = await selectedClassesCollection.findOne(query)
+      const insertOnEnrollment = await enrolledClassCollection.insertOne(findEnrollClasses)
+      const deletedResult = await selectedClassesCollection.deleteOne(query);
+
+      const updateClass ={
+        $inc: {
+          seats: -1,
+          enrol: 1
+        }
+      }
+
+      const updatedClassCollection = await classesCollection.updateOne(queryClass,updateClass)
+
+      res.send({ insertedResult, deletedResult,insertOnEnrollment ,updatedClassCollection});
+    });
 
 
 
