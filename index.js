@@ -45,7 +45,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
 
     const usersCollection = client
@@ -389,7 +389,7 @@ async function run() {
 
     // get enroll data by email
 
-    app.get("/classes/enroll/:email", async (req, res) => {
+    app.get("/classes/enroll/:email",verifyJWT,verifyStudent, async (req, res) => {
       const email = req.params.email;
       const query = { studentEmail: email };
       const result = await enrolledClassCollection.find(query).toArray();
@@ -398,7 +398,7 @@ async function run() {
 
     // payments history
 
-    app.get("/payments/history/:email", async (req, res) => {
+    app.get("/payments/history/:email",verifyJWT,verifyStudent, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const sortOptions = { split: -1 };
@@ -467,7 +467,7 @@ async function run() {
       });
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
