@@ -1,17 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
+const express = require("express");
+const cors = require("cors");
+const morgan = require("morgan");
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 const app = express();
 app.use(cors());
 app.use(express.json());
-require('dotenv').config()
-app.use(morgan('dev'))
+require("dotenv").config();
+app.use(morgan("dev"));
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_TOKEN);
-
-
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
@@ -32,14 +30,7 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-
-
-
-
-
-
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.LINGUAVERSE_NAME}:${process.env.LINGUAVERSE_PASS}@cluster0.eujpnmx.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -48,7 +39,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -57,16 +48,23 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
 
+    const usersCollection = client
+      .db("summerCampUsersDB")
+      .collection("summerCampUsers");
+    const classesCollection = client
+      .db("summerCampUsersDB")
+      .collection("classes");
+    const selectedClassesCollection = client
+      .db("summerCampUsersDB")
+      .collection("selectedClasses");
 
-    const usersCollection = client.db('summerCampUsersDB').collection('summerCampUsers');
-    const classesCollection =  client.db('summerCampUsersDB').collection('classes');
-    const selectedClassesCollection = client.db('summerCampUsersDB').collection('selectedClasses');
+    const paymentsCollection = client
+      .db("summerCampUsersDB")
+      .collection("payments");
 
-    const paymentsCollection= client.db('summerCampUsersDB').collection('payments')
-
-    const enrolledClassCollection = client.db('summerCampUsersDB').collection('enrolledClasses')
-
-
+    const enrolledClassCollection = client
+      .db("summerCampUsersDB")
+      .collection("enrolledClasses");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -80,7 +78,6 @@ async function run() {
       next();
     };
 
-
     const verifyInstructor = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -92,8 +89,6 @@ async function run() {
       }
       next();
     };
-
-
 
     const verifyStudent = async (req, res, next) => {
       const email = req.decoded.email;
@@ -107,9 +102,6 @@ async function run() {
       next();
     };
 
-
-
-
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {
@@ -118,28 +110,25 @@ async function run() {
       res.send({ token });
     });
 
-
     // users
 
-    app.get('/users',verifyJWT,verifyAdmin,async(req,res)=>{
-      const result = await usersCollection.find().toArray()
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
-    })
+    });
 
-
-
-    app.post('/users',async(req,res)=>{
+    app.post("/users", async (req, res) => {
       const users = req.body;
-      const query = {email:users?.email}
-      const isExitUsers =await usersCollection.findOne(query)
-      if(isExitUsers){
-        return res.status(401).send({error:true,message:'users already exit'})
+      const query = { email: users?.email };
+      const isExitUsers = await usersCollection.findOne(query);
+      if (isExitUsers) {
+        return res
+          .status(401)
+          .send({ error: true, message: "users already exit" });
       }
-      const result = await usersCollection.insertOne(users)
-      res.send(result)
-    })
-
-
+      const result = await usersCollection.insertOne(users);
+      res.send(result);
+    });
 
     // verify admin
 
@@ -157,8 +146,6 @@ async function run() {
       res.send(result);
     });
 
-
-
     // verifyInstructor
 
     app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
@@ -174,9 +161,6 @@ async function run() {
       console.log(result);
       res.send(result);
     });
-
-
-
 
     // verify student
 
@@ -194,211 +178,246 @@ async function run() {
       res.send(result);
     });
 
-
-
     // classes
-
 
     // all classes
 
-      app.get('/allClasses',verifyJWT,verifyAdmin,async(req,res)=>{
-        const result = await classesCollection.find().toArray()
-        res.send(result);
-      })
+    app.get("/allClasses", verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
 
-
-
-    app.get('/classes',verifyJWT,verifyInstructor,async(req,res)=>{
+    app.get("/classes", verifyJWT, verifyInstructor, async (req, res) => {
       const email = req.query.email;
-      const query = {instructorEmail:email};
-      const result = await classesCollection.find(query).toArray()
+      const query = { instructorEmail: email };
+      const result = await classesCollection.find(query).toArray();
       res.send(result);
-    })
+    });
 
-
-    app.post('/classes',async(req,res)=>{
-      const classes = req.body
-      const result = await classesCollection.insertOne(classes)
+    app.post("/classes", async (req, res) => {
+      const classes = req.body;
+      const result = await classesCollection.insertOne(classes);
       res.send(result);
-    })
+    });
 
-
-    app.put('/classes/:id',async(req,res)=>{
+    app.put("/classes/:id", async (req, res) => {
       const id = req.params.id;
-      const classInfo = req.body
-      const filter = {_id:new ObjectId(id)}
+      const classInfo = req.body;
+      const filter = { _id: new ObjectId(id) };
       const updateClass = {
-        $set:{
-            className:classInfo.className,
-            image:classInfo.image,
-            seats:classInfo.seats,
-            price:classInfo.price
-        }
-      }
-      const result = await classesCollection.updateOne(filter,updateClass)
-      res.send(result)
-    })
+        $set: {
+          className: classInfo.className,
+          image: classInfo.image,
+          seats: classInfo.seats,
+          price: classInfo.price,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateClass);
+      res.send(result);
+    });
 
-
-    app.delete('/classes/:id',async(req,res)=>{
+    app.delete("/classes/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await classesCollection.deleteOne(query)
-      res.send(result)
-    })
-
-
-
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // admin
 
-     // // give feedback
+    // // give feedback
 
-   app.put('/allClasses/feedback/:id',async(req,res)=>{
-    const id = req.params.id;
-    console.log(id)
-    const feedbackInfo = req.body
-    console.log(feedbackInfo)
-    const filter = {_id:new ObjectId(id)}
-    const options = {upsert:true}
-    const sentFeedBack = {
-      $set:{
-        feedback:feedbackInfo.feedback
-      }
-
-    }
-    const result = await classesCollection.updateOne(filter,sentFeedBack,options)
-    res.send(result);
-   })
-
-
-
-
+    app.put("/allClasses/feedback/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const feedbackInfo = req.body;
+      console.log(feedbackInfo);
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const sentFeedBack = {
+        $set: {
+          feedback: feedbackInfo.feedback,
+        },
+      };
+      const result = await classesCollection.updateOne(
+        filter,
+        sentFeedBack,
+        options
+      );
+      res.send(result);
+    });
 
     // approved
 
-    app.patch('/allClasses/:id',async(req,res)=>{
+    app.patch("/allClasses/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = {_id:new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const approvedClass = {
-        $set:{
-          status:'approved'
-        }
-      }
+        $set: {
+          status: "approved",
+        },
+      };
 
-      const result = await classesCollection.updateOne(filter,approvedClass)
+      const result = await classesCollection.updateOne(filter, approvedClass);
       res.send(result);
-    })
+    });
 
     // denied
 
-    app.patch('/allClasses/denied/:id',async(req,res)=>{
+    app.patch("/allClasses/denied/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = {_id:new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const approvedClass = {
-        $set:{
-          status:'denied'
-        }
-      }
-      const result = await classesCollection.updateOne(filter,approvedClass)
+        $set: {
+          status: "denied",
+        },
+      };
+      const result = await classesCollection.updateOne(filter, approvedClass);
       res.send(result);
-    })
-
+    });
 
     // make admin
 
-    app.patch('/users/admin/:id',async(req,res)=>{
+    app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = {_id:new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const newAdmin = {
-        $set:{
-          role:'admin'
-        }
-      }
-      const options = {upsert:true}
+        $set: {
+          role: "admin",
+        },
+      };
+      const options = { upsert: true };
 
-      const result = await usersCollection.updateOne(filter,newAdmin,options)
+      const result = await usersCollection.updateOne(filter, newAdmin, options);
       res.send(result);
-    })
-
-
+    });
 
     // make instructor
 
-
-    app.patch('/users/instructor/:id',async(req,res)=>{
+    app.patch("/users/instructor/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = {_id:new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const newInstructor = {
-        $set:{
-          role:'instructor'
-        }
-      }
-      const result = await usersCollection.updateOne(filter,newInstructor)
+        $set: {
+          role: "instructor",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, newInstructor);
       res.send(result);
-    })
-
-
+    });
 
     // instructors
 
-    app.get('/users/instructors',async(req,res)=>{
-      const query={role:'instructor'}
-      const result = await usersCollection.find(query).toArray()
-      res.send(result)
-    })
+    app.get("/users/instructors", async (req, res) => {
+      const query = { role: "instructor" };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // approved classes
 
-    app.get('/classes/approved', async(req,res)=>{
-      const query={status:'approved'}
-      const result = await classesCollection.find(query).toArray()
+    app.get("/classes/approved", async (req, res) => {
+      const query = { status: "approved" };
+      const result = await classesCollection.find(query).toArray();
       res.send(result);
-    })
-
-
+    });
 
     // student
 
+    app.delete(
+      "/selectedClasses/:id",
+      verifyJWT,
+      verifyStudent,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { selectClassId: id };
+        console.log(query, id);
+        const result = await selectedClassesCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
-    app.delete('/selectedClasses/:id',verifyJWT,verifyStudent,async(req,res)=>{
-      const id = req.params.id
-      const query = {selectClassId:id}
-      console.log(query,id)
-      const result = await selectedClassesCollection.deleteOne(query)
-      res.send(result);
-    })
+    app.delete(
+      "/enrolledClasses/:id",
+      verifyJWT,
+      verifyStudent,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { selectClassId: id };
+        // console.log(query, id);
+        const result = await enrolledClassCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
+    app.get(
+      "/selectClasses/:email",
+      verifyJWT,
+      verifyStudent,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { studentEmail: email };
+        console.log(query);
+        const result = await selectedClassesCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
-    app.get('/selectClasses/:email',verifyJWT,verifyStudent,async(req,res)=>{
-      const email = req.params.email
-      const query = {studentEmail:email}
-      console.log(query)
-      const result = await selectedClassesCollection.find(query).toArray()
-      res.send(result);
-    })
-
-    app.post('/selectedClasses',async(req,res)=>{
+    app.post("/selectedClasses", async (req, res) => {
       const selectClass = req.body;
-      const result = await selectedClassesCollection.insertOne(selectClass)
+      const result = await selectedClassesCollection.insertOne(selectClass);
       res.send(result);
-    })
+    });
 
+    app.get("/popular/instructors", async (req, res) => {
+      const query = { role: "instructor" };
+      const result = await usersCollection.find(query).limit(6).toArray();
+      res.send(result);
+    });
 
-    app.get('/popular/instructors',async(req,res)=>{
-      const query={role:'instructor'}
-      const result = await usersCollection.find(query).limit(6).toArray()
-      res.send(result)
-    })
+    // popular classes
 
+    app.get("/classes/popular", async (req, res) => {
 
+      const result = await classesCollection
+        .find()
+        .sort({ enrol: -1 })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
 
+    // get enroll data by email
+
+    app.get("/classes/enroll/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { studentEmail: email };
+      const result = await enrolledClassCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // payments history
+
+    app.get("/payments/history/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const sortOptions = { split: -1 };
+
+      const result = await paymentsCollection
+        .find(query)
+        .sort(sortOptions)
+        .toArray();
+
+      // Reverse the order of the documents
+      const reversedResult = result.reverse();
+
+      res.json(reversedResult);
+    });
 
     // payments
 
-
     app.post("/create-payment-intend", verifyJWT, async (req, res) => {
-      const {price} = req.body;
+      const { price } = req.body;
       const amount = price * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -410,52 +429,48 @@ async function run() {
       });
     });
 
-
-app.post("/payments",verifyJWT, async (req, res) => {
+    app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
-      console.log(payment)
+      console.log(payment);
       const insertedResult = await paymentsCollection.insertOne(payment);
-
       // and remove this all item from carts collection after payment...
-
       // enrollment
-
       const queryClass = {
-        _id:new ObjectId(payment.selectedClassId)
-      }
+        _id: new ObjectId(payment.selectedClassId),
+      };
 
       const query = {
-        selectClassId:payment.selectedClassId,
+        selectClassId: payment.selectedClassId,
       };
-      const findEnrollClasses = await selectedClassesCollection.findOne(query)
-      const insertOnEnrollment = await enrolledClassCollection.insertOne(findEnrollClasses)
+
+      const findEnrollClasses = await selectedClassesCollection.findOne(query);
+      const insertOnEnrollment = await enrolledClassCollection.insertOne(
+        findEnrollClasses
+      );
       const deletedResult = await selectedClassesCollection.deleteOne(query);
 
-      const updateClass ={
+      const updateClass = {
         $inc: {
           seats: -1,
-          enrol: 1
-        }
-      }
-
-      const updatedClassCollection = await classesCollection.updateOne(queryClass,updateClass)
-
-      res.send({ insertedResult, deletedResult,insertOnEnrollment ,updatedClassCollection});
+          enrol: 1,
+        },
+      };
+      const updatedClassCollection = await classesCollection.updateOne(
+        queryClass,
+        updateClass
+      );
+      res.send({
+        insertedResult,
+        deletedResult,
+        insertOnEnrollment,
+        updatedClassCollection,
+      });
     });
 
-
-
-
-
-
-
-
-
-
-
-
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -463,20 +478,10 @@ app.post("/payments",verifyJWT, async (req, res) => {
 }
 run().catch(console.dir);
 
+app.get("/", (req, res) => {
+  res.send("LinguaVerse is searching now new languages...");
+});
 
-
-
-
-
-
-
-
-
-app.get('/',(req,res)=>{
-    res.send('LinguaVerse is searching now new languages...')
-})
-
-
-app.listen(port,()=>{
-    console.log(`LinguaVerse is running on port ${port}`)
-})
+app.listen(port, () => {
+  console.log(`LinguaVerse is running on port ${port}`);
+});
